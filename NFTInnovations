@@ -1,0 +1,108 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from typing import Dict, List
+
+class NFT:
+    def __init__(self, token_id: str, name: str, creator: str):
+        self.token_id = token_id
+        self.name = name
+        self.creator = creator
+        self.owner = creator  # Initially owned by the creator
+
+    def transfer_ownership(self, new_owner: str):
+        self.owner = new_owner
+        return f"NFT {self.token_id} ownership transferred to {new_owner}."
+
+    def to_dict(self) -> Dict:
+        return {
+            "Token ID": self.token_id,
+            "Name": self.name,
+            "Creator": self.creator,
+            "Current Owner": self.owner
+        }
+
+class NFTInnovations:
+    def __init__(self):
+        self.nfts = {}  # Maps token IDs to NFT objects
+        self.transactions = []  # List of ownership transactions
+
+    def create_nft(self, token_id: str, name: str, creator: str):
+        if token_id in self.nfts:
+            return "NFT with this ID already exists."
+        self.nfts[token_id] = NFT(token_id, name, creator)
+        return f"NFT {token_id} created by {creator}."
+
+    def transfer_nft(self, token_id: str, new_owner: str):
+        if token_id not in self.nfts:
+            return "NFT not found."
+        nft = self.nfts[token_id]
+        transaction = nft.transfer_ownership(new_owner)
+        self.transactions.append({
+            "Token ID": token_id,
+            "Previous Owner": nft.owner,
+            "New Owner": new_owner
+        })
+        return transaction
+
+    def get_nft_info(self, token_id: str) -> Dict:
+        if token_id not in self.nfts:
+            return "NFT not found."
+        nft = self.nfts[token_id]
+        return nft.to_dict()
+
+    def analyze_nfts(self) -> pd.DataFrame:
+        data = [nft.to_dict() for nft in self.nfts.values()]
+        df = pd.DataFrame(data)
+        return df
+
+    def analyze_transactions(self) -> pd.DataFrame:
+        df = pd.DataFrame(self.transactions)
+        return df
+
+    def plot_nft_ownership(self):
+        df = self.analyze_nfts()
+        ownership_count = df['Current Owner'].value_counts()
+        ownership_count.plot(kind='bar', figsize=(12, 6), color='c')
+        plt.title('NFT Ownership Distribution')
+        plt.xlabel('Owner')
+        plt.ylabel('Number of NFTs')
+        plt.show()
+
+    def plot_transactions(self):
+        df = self.analyze_transactions()
+        df['Previous Owner'].value_counts().plot(kind='bar', figsize=(12, 6), color='b', alpha=0.6, label='Previous Owner')
+        df['New Owner'].value_counts().plot(kind='bar', figsize=(12, 6), color='r', alpha=0.6, label='New Owner')
+        plt.title('NFT Ownership Transactions')
+        plt.xlabel('Owner')
+        plt.ylabel('Number of Transactions')
+        plt.legend()
+        plt.show()
+
+# Example Usage
+if __name__ == "__main__":
+    nft_innovations = NFTInnovations()
+
+    # Create NFTs
+    print(nft_innovations.create_nft("001", "CryptoArt #1", "Alice"))
+    print(nft_innovations.create_nft("002", "CryptoArt #2", "Bob"))
+
+    # Transfer NFTs
+    print(nft_innovations.transfer_nft("001", "Charlie"))
+    print(nft_innovations.transfer_nft("002", "Alice"))
+
+    # Get NFT info
+    print("\nNFT Info for Token ID 001:")
+    print(nft_innovations.get_nft_info("001"))
+
+    # Analyze and plot NFT data
+    print("\nNFT Analysis:")
+    print(nft_innovations.analyze_nfts())
+
+    print("\nNFT Ownership Distribution:")
+    nft_innovations.plot_nft_ownership()
+
+    print("\nNFT Transactions:")
+    print(nft_innovations.analyze_transactions())
+
+    print("\nNFT Ownership Transactions Plot:")
+    nft_innovations.plot_transactions()
